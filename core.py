@@ -6,10 +6,10 @@ import random
 import requests
 from typing import Dict, List
 
-from shutil import copy2
 from bs4 import BeautifulSoup
 
 LOG = logging.getLogger(__name__)
+
 
 def check_path(path: str) -> str:
     """
@@ -61,36 +61,60 @@ def collect_images(path: str) -> Dict:
     return images
 
 
-def generate_images(path: str, count: int, filename: str) -> Dict:
-    path = 'sample/' if not path else path
-    filename = '04-nature_721703848.jpg' if not filename else filename
+def generate_images(path: str, filename: str, count: int) -> Dict:
+    """
+    Make N modified copies if given image.
+
+    Args:
+        path: Folder path where the prototype image is located.
+        filename: Prototype image name.
+        count: Number of copies to be made.
+
+    Returns:
+        Dictionary with file names as keys and BGR maps as values.
+    """
+    path = path if path else 'sample/'
+    filename = filename if filename else 'yellow-780x400.jpg'
     img = cv2.imread(path + filename)
     images = {}
     for i in range(count):
-        images['copy' + str(i)] = modify_color(img)
+        images['copy' + str(i) + '.jpg'] = modify_color(img)
     return images
 
-def modify_color(bgr):
+
+def modify_color(bgr: np.array) -> np.array:
+    """
+    Modify BGR values of image.
+
+    Args:
+        bgr: Instance of cv2 image.
+
+    Returns:
+        Modified BGR map of cv2 image.
+    """
+    # transform BGR map to HSV
     hsv = cv2.cvtColor(bgr, cv2.COLOR_BGR2HSV)
     h, s, v = cv2.split(hsv)
-    h_shift = random.randint(0, 179)
-    s_shift = random.random()
-    v_shift = random.random()**0.5
-    h_new = h + h_shift - 179*(h + h_shift > 179)
+
+    # correction coefficients for hue, saturation and value
+    h_corr = random.randint(0, 360)
+    s_corr = random.choice([0, 1, 1, 1])
+    v_corr = random.random()**0.5
+
+    # hue is defined as angle in range (0, 180)
+    h_new = h + h_corr - 179*(h + h_corr > 179)
     h_new = h_new.astype('uint8')
-    s_new = s*s_shift
+    s_new = s*s_corr
     s_new = s_new.astype('uint8')
-    v_new = v*v_shift
+    v_new = v*v_corr
     v_new = v_new.astype('uint8')
+
+    # modified HSV map
     hsv_new = cv2.merge([h_new, s_new, v_new])
+    # modified BGR map
     bgr_new = cv2.cvtColor(hsv_new, cv2.COLOR_HSV2BGR)
     return bgr_new
-    """cv2.imshow('Original image', bgr)
-    cv2.imshow('HSV image', bgr_new)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()"""
 
-#modify_color(cv2.imread('sample/04-nature_721703848.jpg'))
 
 def get_average_color(image: np.array) -> List:
     """
@@ -119,9 +143,12 @@ def create_color_dict() -> Dict:
     table = soup.find_all('tbody')[1]
     rows = table.find_all('tr')[1:]
     for row in rows:
+        # table head contains color names
         color_name = row.th.a.text
         columns = row.find_all('td')
-        get_rgb_values = lambda x : int(columns[x].text.strip('%\n'))*2.56
+        get_rgb_values = lambda x: int(columns[x].text.strip('%\n'))*2.55
+        # 1st, 2nd and 3rd columns contain RGB values of given color in
+        # relative value, so it needs to be multiplied by 2.55
         red = get_rgb_values(1)
         green = get_rgb_values(2)
         blue = get_rgb_values(3)
@@ -140,8 +167,9 @@ def find_best_color(value: List, color_dict: Dict) -> str:
     Returns:
         Name of the closest basic color to given value.
     """
-    metric = lambda a, b : abs(b[0] - a[0]) + abs(b[1] - a[1]) + \
-                           abs(b[2] - a[2])
+    # for finding the best fit we are using so called Manhattan length
+    metric = lambda a, b: abs(b[0] - a[0]) + abs(b[1] - a[1]) + \
+        abs(b[2] - a[2])
     best_color = ''
     lowest_difference = 1000
     for color in color_dict.keys():
@@ -169,4 +197,4 @@ def create_folders(images: Dict, color_dict: Dict, source: str) -> None:
         if not os.path.exists(destination):
             os.mkdir(destination)
             LOG.info(f'Creating \'{destination}\' folder')
-        cv2.imwrite(source + file_name, values)
+        cv2.imwrite(destination + file_name, values)

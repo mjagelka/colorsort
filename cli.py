@@ -3,10 +3,12 @@
 import argparse
 import logging
 
-from core import *
+from core import (check_path, generate_images, collect_images,
+                  create_color_dict, create_folders)
 
 logging.basicConfig(level=logging.INFO)
 LOG = logging.getLogger()
+
 
 def main() -> None:
     """Run the workflow."""
