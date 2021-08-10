@@ -20,7 +20,7 @@ def main() -> None:
         LOG.setLevel(logging.DEBUG)
 
     if args.action == 'generate':
-        images = generate_images(path, args.count, args.filename)
+        images = generate_images(path, args.filename, args.count)
     elif args.action == 'use-existing':
         images = collect_images(path)
 
@@ -39,7 +39,7 @@ def create_parser() -> argparse.ArgumentParser:
     generate_parser = subparsers.add_parser(
         'generate', help='Generate altered color copies of sample image')
     generate_parser.add_argument(
-        '--count', type=int, help='Number of generated images')
+        '--count', type=int, required=True, help='Number of generated images')
     generate_parser.add_argument(
         '--filename', help='File name of the prototype image')
 
