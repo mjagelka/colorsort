@@ -39,7 +39,7 @@ cs_container$ ./cli.py use-existing ...
 If you want to copy the directory structure to your host, type in the host
 console:
 ```
-docker cp cs_container:tmp/colorsort/colors colors
+$ docker cp cs_container:tmp/colorsort/colors colors
 ```
 
 ## Dependencies
