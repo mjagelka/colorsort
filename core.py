@@ -1,11 +1,11 @@
-import cv2
 import logging
-import numpy as np
 import os
 import random
-import requests
 from typing import Dict, List
 
+import cv2
+import numpy as np
+import requests
 from bs4 import BeautifulSoup
 
 LOG = logging.getLogger(__name__)
