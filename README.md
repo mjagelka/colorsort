@@ -44,7 +44,7 @@ $ docker cp cs_container:tmp/colorsort/colors colors
 ## Dependencies
 All dependencies can be installed with
 ```
-$ pip install -r requirements.txt
+$ pip3 install -r requirements.txt
 ```
 
 ## Testing
