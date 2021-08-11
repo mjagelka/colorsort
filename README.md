@@ -27,7 +27,6 @@ If you want to avoid installing the dependencies, you can use the
 containerized version of project. For that follow these steps inside
 colorsort folder:
 ```
-$ docker pull fedora:34
 $ docker build -t cs_image -f Dockerfile .
 $ docker run -ti --name cs_container cs_image bash
 ```
